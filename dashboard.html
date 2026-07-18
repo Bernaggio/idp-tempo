@@ -276,7 +276,10 @@ function buildTeamPlayers(team){
       fun:(self&&self.data&&self.data.fun)||null,
       coaches:coaches,
       selfFilled: mine.length>0,
-      filledCoachNames: Object.keys(lastByCoach)
+      filledCoachNames: Object.keys(lastByCoach),
+      selfPosMain:(self&&self.posMain)||'',
+      selfPosSecond:(self&&self.posSecond)||'',
+      selfBestPos:(self&&self.bestPos)||''
     };
   });
 }
@@ -379,7 +382,12 @@ function showPlayer(p){
   if(both){let s=0,n=0;allSkillKeys().forEach(k=>{if(k in self&&k in coach){s+=Math.abs(self[k]-coach[k]);n++}});if(n)align=Math.max(0,Math.round(100-(s/n)*10));}
 
   let html='';
-  html+='<div class="dh"><div><div class="nm">'+p.last+' '+p.first+'</div><div class="sub">'+(POS_LABEL[p.pos]||p.pos)+' · '+p.year+' · '+CUR_PERIOD_SHORT+'</div></div>'
+  const posBits=[];
+  if(p.selfPosMain) posBits.push('hlavní '+(POS_LABEL[p.selfPosMain]||p.selfPosMain));
+  if(p.selfPosSecond) posBits.push('druhá '+(POS_LABEL[p.selfPosSecond]||p.selfPosSecond));
+  if(p.selfBestPos) posBits.push('nejlíp se cítí na '+(POS_LABEL[p.selfBestPos]||p.selfBestPos));
+  const posSelfTxt=posBits.length? ' <span style="color:var(--muted);font-weight:500">(hráč uvedl: '+posBits.join(', ')+')</span>':'';
+  html+='<div class="dh"><div><div class="nm">'+p.last+' '+p.first+'</div><div class="sub">'+(POS_LABEL[p.pos]||p.pos)+posSelfTxt+' · '+p.year+' · '+CUR_PERIOD_SHORT+'</div></div>'
     +(both?'<div class="align"><div class="v" style="color:var(--green-dark)">'+align+'%</div><div class="l">SHODA S HRÁČEM</div></div>':'')
     +(both?'<div class="toggle" id="coachToggle" onclick="toggleMode()"></div>':'')+'</div>';
   html+='<div class="playeronly-note">👤 Režim pro hráče — vidí souhrnný pohled (bez toho, kdo z trenérů co řekl).</div>';

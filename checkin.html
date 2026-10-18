@@ -1,0 +1,591 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>IDP Tempo — Týdenní check-in</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&display=swap">
+<style>
+  :root{
+    color-scheme: light;
+    /* Shodné s index.html a taping.html — jeden vizuální systém. */
+    --ground:#f6f6f4;--surface:#FFFFFF;--surface-2:#f1f1ee;--ink:#1c1c1e;--muted:#6b6b70;--faint:#9a9aa0;
+    --hair:#e7e7ea;--hair-strong:#d8d8dd;--brand:#C7153E;--brand-ink:#9E102F;
+    --good:#4E8C1C;--good-bg:#EEF8E6;--warn:#B9780A;--warn-bg:#FBF1DE;--crit:#C7153E;--crit-bg:#FBE9EE;
+    --shadow:0 1px 2px rgba(28,28,30,.04),0 8px 24px -12px rgba(28,28,30,.16);--radius:14px;
+  }
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{margin:0;background:var(--ground);color:var(--ink);font-family:"Barlow",system-ui,-apple-system,"Segoe UI",sans-serif;font-size:16px;line-height:1.5;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1100px;margin:0 auto;padding:0 18px 90px}
+  [hidden]{display:none!important}
+
+  header.top{padding:26px 0 14px;display:flex;align-items:center;gap:12px}
+  .crest{width:42px;height:42px;flex:none;object-fit:contain}
+  .wordmark{font-family:"Barlow Condensed",sans-serif;font-weight:700;font-size:27px;letter-spacing:.02em;line-height:1;text-transform:uppercase}
+  .wordmark .lock{color:var(--brand)}
+  .tagline{font-family:"Barlow Condensed",sans-serif;font-weight:600;text-transform:uppercase;letter-spacing:.14em;font-size:11px;color:var(--muted);margin-top:3px}
+
+  .card{background:var(--surface);border:1px solid var(--hair-strong);border-radius:var(--radius);box-shadow:var(--shadow);padding:20px;margin-top:14px}
+  h1{font-family:"Barlow Condensed",sans-serif;font-weight:700;font-size:23px;margin:0 0 4px}
+  h2{font-family:"Barlow Condensed",sans-serif;font-weight:700;text-transform:uppercase;letter-spacing:.05em;font-size:15px;margin:0 0 2px}
+  .sub{color:var(--muted);font-size:13.5px;margin:0 0 14px}
+  .lead{color:var(--muted);font-size:14.5px;margin:0 0 16px;max-width:60ch}
+
+  label.fl{display:block;font-family:"Barlow Condensed",sans-serif;font-weight:600;text-transform:uppercase;letter-spacing:.1em;font-size:10.5px;color:var(--faint);margin-bottom:5px}
+  input,select{width:100%;font-family:inherit;font-size:15.5px;color:var(--ink);background:var(--surface);border:1px solid var(--hair-strong);border-radius:10px;padding:10px 11px}
+  input:focus-visible,select:focus-visible{outline:2px solid var(--brand);outline-offset:1px;border-color:var(--brand)}
+  .btn{font-family:"Barlow Condensed",sans-serif;font-weight:700;text-transform:uppercase;letter-spacing:.05em;font-size:13.5px;border-radius:11px;padding:12px 20px;cursor:pointer;border:1px solid var(--hair-strong);background:var(--surface);color:var(--ink)}
+  .btn.primary{background:var(--brand);color:#fff;border-color:var(--brand)}
+  .btn.primary:hover{background:var(--brand-ink)}
+  .btn:hover{border-color:var(--brand)}
+  .btn:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+
+  /* ovládací řádek — filtry nad grafy, v jedné lince */
+  .controls{display:flex;gap:12px;flex-wrap:wrap;align-items:end;margin-top:14px}
+  .controls .f{min-width:170px}
+  .controls .spacer{flex:1}
+
+  /* KPI dlaždice */
+  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-top:14px}
+  .kpi{background:var(--surface);border:1px solid var(--hair-strong);border-radius:var(--radius);box-shadow:var(--shadow);padding:15px 17px}
+  .kpi .lbl{font-family:"Barlow Condensed",sans-serif;font-weight:600;text-transform:uppercase;letter-spacing:.1em;font-size:10.5px;color:var(--faint)}
+  .kpi .num{font-family:"Barlow Condensed",sans-serif;font-weight:700;font-size:34px;line-height:1.1;font-variant-numeric:tabular-nums;margin-top:3px}
+  .kpi .note{font-size:12px;color:var(--muted);margin-top:2px}
+  .kpi.alarm .num{color:var(--crit)}
+
+  /* stavové odznaky — vždy barva + text, nikdy barva sama */
+  .badge{display:inline-flex;align-items:center;gap:6px;font-family:"Barlow Condensed",sans-serif;font-weight:700;text-transform:uppercase;letter-spacing:.05em;font-size:11.5px;padding:3px 9px;border-radius:99px;white-space:nowrap}
+  .badge .dot{width:8px;height:8px;border-radius:50%;flex:none}
+  .b-good{color:var(--good);background:var(--good-bg)} .b-good .dot{background:var(--good)}
+  .b-warn{color:var(--warn);background:var(--warn-bg)} .b-warn .dot{background:var(--warn)}
+  .b-crit{color:var(--crit);background:var(--crit-bg)} .b-crit .dot{background:var(--crit)}
+  .b-none{color:var(--muted);background:var(--surface-2)} .b-none .dot{background:var(--faint)}
+
+  .chips{display:flex;flex-wrap:wrap;gap:7px;margin-top:4px}
+  .chip{font-family:"Barlow Condensed",sans-serif;font-weight:600;font-size:13px;color:var(--crit);background:var(--crit-bg);border:1px solid var(--crit-bg);border-radius:99px;padding:6px 12px}
+  .chip.ok{color:var(--good);background:var(--good-bg);border-color:var(--good-bg)}
+
+  table{width:100%;border-collapse:collapse;font-size:14.5px}
+  th{font-family:"Barlow Condensed",sans-serif;font-weight:600;text-transform:uppercase;letter-spacing:.08em;font-size:10.5px;color:var(--faint);text-align:left;padding:0 10px 7px;border-bottom:2px solid var(--hair-strong);white-space:nowrap}
+  th.num,td.num{text-align:right;font-variant-numeric:tabular-nums}
+  td{padding:10px;border-bottom:1px solid var(--hair);vertical-align:middle}
+  tr:last-child td{border-bottom:0}
+  tbody tr:hover{background:var(--surface-2)}
+  .who{font-weight:600}
+  .big{font-family:"Barlow Condensed",sans-serif;font-weight:700;font-size:19px;font-variant-numeric:tabular-nums}
+  .slabe{color:var(--muted);font-size:13px}
+  .tagrow{margin-top:4px;font-size:12px;color:var(--muted);line-height:1.3}
+  .tbl-wrap{overflow-x:auto;margin-top:6px}
+
+  /* graf */
+  .chart{margin-top:8px;position:relative}
+  .chart svg{display:block;width:100%;height:auto;overflow:visible}
+  .gridline{stroke:var(--hair);stroke-width:1}
+  .axis-txt{fill:var(--faint);font-size:11px;font-family:"Barlow",sans-serif}
+  .line{fill:none;stroke:var(--brand);stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  .pt{fill:var(--brand);stroke:var(--surface);stroke-width:2}
+  .hit{fill:transparent;cursor:pointer}
+  .tip{position:absolute;pointer-events:none;background:var(--ink);color:#fff;font-size:12.5px;line-height:1.35;padding:7px 10px;border-radius:8px;white-space:nowrap;transform:translate(-50%,-115%);opacity:0;transition:opacity .12s}
+  .tip.on{opacity:1}
+  .spark{display:block}
+  .spark path{fill:none;stroke:var(--muted);stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+  .spark circle{fill:var(--brand)}
+
+  .msg{font-size:13.5px;color:var(--muted);margin-top:10px}
+  .msg.err{color:var(--crit);font-weight:600}
+  .vzkaz{border-left:3px solid var(--hair-strong);padding:2px 0 2px 13px;margin:14px 0}
+  .vzkaz .kdo{font-weight:600;font-size:14.5px}
+  .vzkaz .kdy{color:var(--faint);font-size:12px;margin-left:6px;font-variant-numeric:tabular-nums}
+  .vzkaz .co{margin-top:3px;white-space:pre-wrap}
+  .vzkaz .otazka{color:var(--muted);font-size:12.5px;margin-top:7px}
+  .prazdno{color:var(--muted);font-size:14px;padding:6px 0}
+  .legenda{font-size:12px;color:var(--faint);margin-top:10px;line-height:1.5}
+  .back{padding:10px 0 0;font-size:14px}
+  .back a{color:var(--muted);text-decoration:none}
+  .back a:hover{color:var(--brand);text-decoration:underline}
+  @media (max-width:560px){ .wrap{padding:0 14px 70px} .kpi .num{font-size:28px} }
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <img class="crest" id="crest" alt="Tempo">
+    <div>
+      <div class="wordmark">IDP <span class="lock">Tempo</span></div>
+      <div class="tagline">Týdenní check-in — přehled pro trenéry</div>
+    </div>
+  </header>
+
+  <!-- BRÁNA -->
+  <div id="gate" class="card">
+    <h1>Přístup</h1>
+    <p class="lead">Zadej trenérský PIN. Přehled ukazuje odpovědi hráčů z týdenního check-inu — ber je jako citlivé.</p>
+    <div style="max-width:260px"><label class="fl" for="pin">PIN</label><input id="pin" type="password" autocomplete="off"></div>
+    <div style="margin-top:14px"><button class="btn primary" id="gateBtn" type="button">Vstoupit</button></div>
+    <p class="msg" id="gateMsg"></p>
+  </div>
+
+  <!-- NAČÍTÁNÍ -->
+  <div id="loading" class="card" hidden>
+    <p class="msg" id="loadMsg">Načítám data…</p>
+    <div id="retryWrap" hidden style="margin-top:12px"><button class="btn" id="retryBtn" type="button">Zkusit znovu</button></div>
+  </div>
+
+  <!-- APLIKACE -->
+  <div id="app" hidden>
+
+    <div class="controls">
+      <div class="f">
+        <label class="fl" for="fTym">Tým</label>
+        <select id="fTym"></select>
+      </div>
+      <div class="f">
+        <label class="fl" for="fTyden">Týden</label>
+        <select id="fTyden"></select>
+      </div>
+      <div class="spacer"></div>
+      <div><button class="btn" id="refreshBtn" type="button">Načíst znovu</button></div>
+    </div>
+
+    <div class="kpis">
+      <div class="kpi"><div class="lbl">Vyplnilo</div><div class="num" id="kVypl">–</div><div class="note" id="kVyplNote"></div></div>
+      <div class="kpi"><div class="lbl">Průměr týmu</div><div class="num" id="kPrum">–</div><div class="note" id="kPrumNote"></div></div>
+      <div class="kpi" id="kFlagBox"><div class="lbl">Náročný týden</div><div class="num" id="kFlag">–</div><div class="note">hráčů s nízkým průměrem</div></div>
+      <div class="kpi"><div class="lbl">Zátěž týdne</div><div class="num" id="kLoad">–</div><div class="note">průměr, 1 lehký – 10 vyčerpávající</div></div>
+    </div>
+
+    <!-- NEVYPLNILI -->
+    <div class="card">
+      <h2>Kdo nevyplnil</h2>
+      <p class="sub" id="chybiSub"></p>
+      <div class="chips" id="chybi"></div>
+    </div>
+
+    <!-- TABULKA HRÁČŮ -->
+    <div class="card">
+      <h2>Hráči v tomhle týdnu</h2>
+      <p class="sub">Seřazeno od nejhoršího průměru. Trend ukazuje posledních 6 týdnů.</p>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr>
+            <th>Hráč</th>
+            <th class="num">Průměr</th>
+            <th>Stav</th>
+            <th>Trend</th>
+            <th>Nejslabší / mimo fotbal</th>
+            <th class="num">Zátěž</th>
+            <th class="num">Čas</th>
+          </tr></thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </div>
+      <p class="legenda" id="legenda"></p>
+    </div>
+
+    <!-- GRAF -->
+    <div class="card">
+      <h2>Průměr týmu v čase</h2>
+      <p class="sub" id="grafSub">Vyšší je lepší. Počítá se jen z vyplněných check-inů.</p>
+      <div class="chart" id="chartBox">
+        <svg id="chart" viewBox="0 0 720 240" role="img" aria-labelledby="chartTitle"><title id="chartTitle">Průměr týmu po týdnech</title></svg>
+        <div class="tip" id="tip"></div>
+      </div>
+    </div>
+
+    <!-- VZKAZY -->
+    <div class="card">
+      <h2>Vzkazy a měsíční ohlédnutí</h2>
+      <p class="sub">Od nejnovějších. Tohle se nikde jinde nezobrazuje — projdi to.</p>
+      <div id="vzkazy"></div>
+    </div>
+
+    <!-- KVALITA -->
+    <div class="card">
+      <h2>Kvalita vyplnění</h2>
+      <p class="sub">Komu to nesedí — buď to proklikal, nebo dal všude stejné číslo.</p>
+      <div id="kvalita"></div>
+    </div>
+
+    <div class="back"><a href="./">‹ Zpět na rozcestník</a> &nbsp;·&nbsp; <a href="./dashboard.html">Rozvojové plány (IDP) ›</a></div>
+  </div>
+</div>
+
+<script>
+/* ===== Konfigurace ===== */
+const TAPING_URL = 'https://script.google.com/macros/s/AKfycbztRpV94gfMseYkZU4qixoLlyJiZSV_yDdGGehuKoNf4qgHTNgupknQAQAOzJRoZ4Ld9g/exec';
+const ROSTER_URL = 'https://script.google.com/macros/s/AKfycbwDcr4dQd_C7AeUlA538Ou-gE-YwuD8gXEOHKkSPu1A38H3zW2cXz3ZC-osJfBiQtod/exec';
+const ROSTER_CLUB = 'Tempo';
+const PIN = 'cafc2026';
+const CREST="data:image/jpeg;base64,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";
+
+/* Položky check-inu. dir:"neg" = vyšší číslo je horší, přepočítává se na 11-v.
+   scored:false se nepočítá do průměru (zátěž je orientační, ne hodnotící). */
+const ITEMS = [
+  {id:"unava",    dir:"neg", lab:"Únava"},
+  {id:"spanek",   dir:"pos", lab:"Spánek"},
+  {id:"bolest",   dir:"neg", lab:"Bolest svalů"},
+  {id:"stres",    dir:"neg", lab:"Stres"},
+  {id:"treninky", dir:"pos", lab:"Tréninky"},
+  {id:"hlava",    dir:"pos", lab:"Soustředěnost"},
+  {id:"sebeduvera",dir:"pos",lab:"Sebedůvěra"},
+  {id:"chut",     dir:"pos", lab:"Chuť do fotbalu"},
+  {id:"tym",      dir:"pos", lab:"Vztahy v týmu"},
+  {id:"offload",  dir:"neg", lab:"Zátěž mimo fotbal", scored:false},
+  {id:"load",     dir:"neg", lab:"Náročnost týdne", scored:false}
+];
+const REFLEXE = [
+  ["r_move","Co šlo nejlíp a co brzdilo"],
+  ["r_one","Na čem chce zamakat"],
+  ["r_goal","Blíž svému cíli"]
+];
+
+let ROWS = [], ROSTER = [], TYDNY = [];
+
+/* ===== Pomocné ===== */
+function num(x){ const n = parseFloat(String(x).replace(',','.')); return isFinite(n) ? n : null; }
+function well(item, v){ return item.dir === 'neg' ? (11 - v) : v; }
+function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+function show(id){ ['gate','loading','app'].forEach(x => document.getElementById(x).hidden = (x !== id)); }
+
+/* Období: 2026-W40 → „týden 40 / 2026", 2026-M10 → „říjen 2026" */
+const MESICE = ['leden','únor','březen','duben','květen','červen','červenec','srpen','září','říjen','listopad','prosinec'];
+function obdobiLabel(o){
+  const s = String(o||'');
+  let m = s.match(/^(\d{4})-W(\d{1,2})$/);
+  if (m) return 'týden ' + Number(m[2]) + ' / ' + m[1];
+  m = s.match(/^(\d{4})-M(\d{1,2})$/);
+  if (m) return MESICE[Number(m[2]) - 1] + ' ' + m[1];
+  return s;
+}
+function obdobiKratce(o){
+  const m = String(o||'').match(/^(\d{4})-W(\d{1,2})$/);
+  return m ? ('t' + Number(m[2])) : obdobiLabel(o);
+}
+
+/* ===== JSONP ===== */
+function jsonp(url, cb, ms){
+  ms = ms || 25000;
+  const fn = '__cb' + Date.now() + Math.floor(Math.random() * 10000);
+  const s = document.createElement('script');
+  let done = false;
+  const konec = r => { if (done) return; done = true; clearTimeout(t); try{ delete window[fn]; }catch(e){} try{ s.remove(); }catch(e){} cb(r); };
+  const t = setTimeout(() => konec(null), ms);
+  window[fn] = r => konec(r);
+  s.onerror = () => konec(null);
+  s.src = url + (url.indexOf('?') >= 0 ? '&' : '?') + 'callback=' + fn + '&t=' + Date.now();
+  document.body.appendChild(s);
+}
+
+/* ===== Načtení ===== */
+function nacti(){
+  show('loading');
+  document.getElementById('retryWrap').hidden = true;
+  const lm = document.getElementById('loadMsg');
+  lm.className = 'msg'; lm.textContent = 'Načítám data…';
+  let hotovo = 0, chyba = false;
+  const dost = () => { if (++hotovo === 2) { if (chyba && !ROWS.length) selhalo(); else { postav(); show('app'); } } };
+  jsonp(TAPING_URL + '?action=data', r => {
+    if (r && r.ok && Array.isArray(r.rows)) ROWS = r.rows; else chyba = true;
+    dost();
+  });
+  jsonp(ROSTER_URL + '?action=taping&club=' + encodeURIComponent(ROSTER_CLUB), r => {
+    if (r && r.ok && Array.isArray(r.players)) ROSTER = r.players; else chyba = true;
+    dost();
+  });
+}
+function selhalo(){
+  const lm = document.getElementById('loadMsg');
+  lm.textContent = 'Data se nepodařilo načíst. Zkontroluj připojení.';
+  lm.className = 'msg err';
+  document.getElementById('retryWrap').hidden = false;
+}
+
+/* ===== Sestavení ovládání ===== */
+function postav(){
+  const tymy = [...new Set(ROSTER.map(p => p.kategorie).filter(Boolean))].sort();
+  const sel = document.getElementById('fTym');
+  sel.innerHTML = tymy.map(t => '<option>' + esc(t) + '</option>').join('');
+  if (!tymy.length) sel.innerHTML = '<option>U15</option>';
+  sel.onchange = prekresli;
+  document.getElementById('fTyden').onchange = prekresli;
+  document.getElementById('refreshBtn').onclick = nacti;
+  prekresliTydny();
+  prekresli();
+}
+function prekresliTydny(){
+  const tym = document.getElementById('fTym').value;
+  TYDNY = [...new Set(ROWS.filter(r => r.typ === 'tyden' && (!tym || r.kategorie === tym)).map(r => r.obdobi))]
+            .filter(Boolean).sort();
+  const sel = document.getElementById('fTyden');
+  sel.innerHTML = TYDNY.length
+    ? TYDNY.slice().reverse().map(o => '<option value="' + esc(o) + '">' + esc(obdobiLabel(o)) + '</option>').join('')
+    : '<option value="">— zatím žádná data —</option>';
+}
+
+/* Poslední vyplnění každého hráče za dané období (duplicity: platí to poslední) */
+function posledniZaObdobi(tym, obdobi){
+  const m = {};
+  ROWS.forEach(r => {
+    if (r.typ !== 'tyden' || r.obdobi !== obdobi) return;
+    if (tym && r.kategorie !== tym) return;
+    const id = String(r.facr_id);
+    const por = num(r.poradi) || 0;
+    const cur = m[id];
+    if (!cur) { m[id] = r; return; }
+    const curPor = num(cur.poradi) || 0;
+    if (por > curPor) { m[id] = r; return; }
+    if (por === curPor && String(r.timestamp) >= String(cur.timestamp)) m[id] = r;
+  });
+  return m;
+}
+
+function skore(r){
+  const p = num(r.prumer);
+  if (p !== null) return p;
+  const vals = ITEMS.filter(i => i.scored !== false)
+                    .map(i => ({ i, v: num(r[i.id]) }))
+                    .filter(x => x.v !== null)
+                    .map(x => well(x.i, x.v));
+  return vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : null;
+}
+function stav(p){
+  if (p === null) return { t: 'Nevyplnil', c: 'b-none' };
+  if (p <= 4) return { t: 'Náročný týden', c: 'b-crit' };
+  if (p <= 6) return { t: 'Slabší týden', c: 'b-warn' };
+  return { t: 'Dobrý týden', c: 'b-good' };
+}
+function nejslabsi(r){
+  return ITEMS.filter(i => i.scored !== false)
+    .map(i => ({ lab: i.lab, w: (num(r[i.id]) === null ? null : well(i, num(r[i.id]))) }))
+    .filter(x => x.w !== null && x.w <= 4)
+    .sort((a, b) => a.w - b.w)
+    .slice(0, 3)
+    .map(x => x.lab.toLowerCase())
+    .join(', ');
+}
+
+/* ===== Hlavní vykreslení ===== */
+function prekresli(){
+  prekresliTydny();
+  const tym = document.getElementById('fTym').value;
+  const obdobi = document.getElementById('fTyden').value;
+  const soupiska = ROSTER.filter(p => !tym || p.kategorie === tym);
+  const vypl = posledniZaObdobi(tym, obdobi);
+
+  /* --- KPI --- */
+  const pocetVypl = Object.keys(vypl).length;
+  const celkem = soupiska.length;
+  document.getElementById('kVypl').textContent = celkem ? (pocetVypl + '/' + celkem) : String(pocetVypl);
+  document.getElementById('kVyplNote').textContent = celkem
+    ? (Math.round(pocetVypl / celkem * 100) + ' % soupisky')
+    : 'soupiska se nenačetla';
+
+  const skoreList = Object.values(vypl).map(skore).filter(x => x !== null);
+  const prumer = skoreList.length ? skoreList.reduce((a, b) => a + b, 0) / skoreList.length : null;
+  document.getElementById('kPrum').textContent = prumer === null ? '–' : prumer.toFixed(1);
+  document.getElementById('kPrumNote').textContent = prumer === null ? 'zatím nic' : 'z 10, vyšší je lepší';
+
+  const kritickych = Object.values(vypl).filter(r => { const p = skore(r); return p !== null && p <= 4; }).length;
+  document.getElementById('kFlag').textContent = String(kritickych);
+  document.getElementById('kFlagBox').className = 'kpi' + (kritickych ? ' alarm' : '');
+
+  const loady = Object.values(vypl).map(r => num(r.load)).filter(x => x !== null);
+  document.getElementById('kLoad').textContent = loady.length
+    ? (loady.reduce((a, b) => a + b, 0) / loady.length).toFixed(1) : '–';
+
+  /* --- Nevyplnili --- */
+  const chybi = soupiska.filter(p => !vypl[String(p.facr_id)]);
+  const box = document.getElementById('chybi');
+  document.getElementById('chybiSub').textContent =
+    !obdobi ? 'Zatím nejsou žádná data.'
+    : chybi.length ? (chybi.length + ' z ' + celkem + ' — ' + obdobiLabel(obdobi))
+    : 'Nikdo. Vyplnila celá soupiska.';
+  box.innerHTML = chibiHtml(chybi);
+
+  /* --- Tabulka --- */
+  const radky = soupiska.map(p => {
+    const r = vypl[String(p.facr_id)];
+    return { p, r, s: r ? skore(r) : null };
+  }).sort((a, b) => {
+    if (a.s === null && b.s === null) return (a.p.prijmeni || '').localeCompare(b.p.prijmeni || '', 'cs');
+    if (a.s === null) return 1;
+    if (b.s === null) return -1;
+    return a.s - b.s;
+  });
+  document.getElementById('tbody').innerHTML = radky.map(x => {
+    const st = stav(x.s);
+    const r = x.r;
+    const sek = r ? num(r.sekundy) : null;
+    const por = r ? (num(r.poradi) || 0) : 0;
+    return '<tr>' +
+      '<td><span class="who">' + esc(x.p.prijmeni) + ' ' + esc(x.p.jmeno) + '</span>' +
+        (por > 1 ? ' <span class="slabe">(' + por + '× )</span>' : '') + '</td>' +
+      '<td class="num"><span class="big">' + (x.s === null ? '–' : x.s.toFixed(1)) + '</span></td>' +
+      '<td><span class="badge ' + st.c + '"><span class="dot"></span>' + st.t + '</span></td>' +
+      '<td>' + sparkline(String(x.p.facr_id), tym) + '</td>' +
+      '<td class="slabe">' + (r ? (esc(nejslabsi(r) || '—') + (r.tagy ? '<div class="tagrow">🏷 ' + esc(r.tagy) + '</div>' : '')) : '—') + '</td>' +
+      '<td class="num">' + (r && num(r.load) !== null ? num(r.load) : '–') + '</td>' +
+      '<td class="num slabe">' + (sek === null ? '–' : (sek < 60 ? sek + ' s' : Math.round(sek / 60) + ' min')) + '</td>' +
+    '</tr>';
+  }).join('');
+  document.getElementById('legenda').textContent =
+    'Průměr je z otázek o pohodě a fotbalu; náročnost týdne se do něj nepočítá. ' +
+    'Pod 4 = náročný týden, 4–6 = slabší. „(2×)" znamená, že hráč období vyplnil víckrát — bere se poslední.';
+
+  /* --- Graf --- */
+  graf(tym);
+
+  /* --- Vzkazy a kvalita --- */
+  vzkazy(tym);
+  kvalita(tym, obdobi);
+}
+
+function chibiHtml(chybi){
+  if (!chybi.length) return '<span class="chip ok">Kompletní</span>';
+  return chybi.map(p => '<span class="chip">' + esc(p.prijmeni) + ' ' + esc(p.jmeno) + '</span>').join('');
+}
+
+/* ===== Sparkline — posledních 6 týdnů jednoho hráče ===== */
+function sparkline(facrId, tym){
+  const body = TYDNY.slice(-6).map(o => {
+    const m = posledniZaObdobi(tym, o);
+    const r = m[facrId];
+    return r ? skore(r) : null;
+  });
+  const maji = body.filter(x => x !== null);
+  if (maji.length < 2) return '<span class="slabe">—</span>';
+  const W = 86, H = 24, pad = 3;
+  const xs = i => pad + (W - 2 * pad) * (body.length === 1 ? 0.5 : i / (body.length - 1));
+  const ys = v => H - pad - (H - 2 * pad) * ((v - 1) / 9);
+  let d = '', zvednuto = true;
+  body.forEach((v, i) => {
+    if (v === null) { zvednuto = true; return; }
+    d += (zvednuto ? 'M' : 'L') + xs(i).toFixed(1) + ' ' + ys(v).toFixed(1) + ' ';
+    zvednuto = false;
+  });
+  const posledniI = body.map((v, i) => v === null ? -1 : i).filter(i => i >= 0).pop();
+  return '<svg class="spark" width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + ' ' + H + '" aria-hidden="true">' +
+    '<path d="' + d.trim() + '"/>' +
+    '<circle cx="' + xs(posledniI).toFixed(1) + '" cy="' + ys(body[posledniI]).toFixed(1) + '" r="2.6"/>' +
+  '</svg>';
+}
+
+/* ===== Graf průměru týmu (jedna řada → bez legendy, název ji pojmenovává) ===== */
+function graf(tym){
+  const svg = document.getElementById('chart');
+  const tip = document.getElementById('tip');
+  const data = TYDNY.map(o => {
+    const m = posledniZaObdobi(tym, o);
+    const s = Object.values(m).map(skore).filter(x => x !== null);
+    return { o, v: s.length ? s.reduce((a, b) => a + b, 0) / s.length : null, n: s.length };
+  }).filter(d => d.v !== null);
+
+  document.getElementById('grafSub').textContent = data.length < 2
+    ? 'Na graf je potřeba aspoň dva týdny dat. Zatím jich je ' + data.length + '.'
+    : 'Vyšší je lepší. Počítá se jen z vyplněných check-inů.';
+
+  if (data.length < 2) { svg.innerHTML = '<title>Průměr týmu po týdnech</title>'; return; }
+
+  const W = 720, H = 240, L = 34, R = 10, T = 14, B = 30;
+  const xs = i => L + (W - L - R) * (data.length === 1 ? 0.5 : i / (data.length - 1));
+  const ys = v => T + (H - T - B) * (1 - (v - 1) / 9);
+
+  let g = '<title>Průměr týmu po týdnech</title>';
+  [2, 4, 6, 8, 10].forEach(v => {
+    g += '<line class="gridline" x1="' + L + '" y1="' + ys(v).toFixed(1) + '" x2="' + (W - R) + '" y2="' + ys(v).toFixed(1) + '"/>';
+    g += '<text class="axis-txt" x="' + (L - 8) + '" y="' + (ys(v) + 4).toFixed(1) + '" text-anchor="end">' + v + '</text>';
+  });
+  const krok = Math.ceil(data.length / 12);
+  data.forEach((d, i) => {
+    if (i % krok === 0 || i === data.length - 1) {
+      g += '<text class="axis-txt" x="' + xs(i).toFixed(1) + '" y="' + (H - B + 18) + '" text-anchor="middle">' + esc(obdobiKratce(d.o)) + '</text>';
+    }
+  });
+  g += '<path class="line" d="' + data.map((d, i) => (i ? 'L' : 'M') + xs(i).toFixed(1) + ' ' + ys(d.v).toFixed(1)).join(' ') + '"/>';
+  data.forEach((d, i) => {
+    g += '<circle class="pt" cx="' + xs(i).toFixed(1) + '" cy="' + ys(d.v).toFixed(1) + '" r="4.5"/>';
+    g += '<rect class="hit" x="' + (xs(i) - 18).toFixed(1) + '" y="' + T + '" width="36" height="' + (H - T - B) + '" ' +
+         'data-i="' + i + '" tabindex="0" role="button" aria-label="' + esc(obdobiLabel(d.o)) + ': ' + d.v.toFixed(1) + '"/>';
+  });
+  svg.innerHTML = g;
+
+  const box = document.getElementById('chartBox');
+  svg.querySelectorAll('.hit').forEach(el => {
+    const ukaz = () => {
+      const i = Number(el.dataset.i), d = data[i];
+      tip.innerHTML = '<strong>' + esc(obdobiLabel(d.o)) + '</strong><br>průměr ' + d.v.toFixed(1) + ' · ' + d.n + ' vyplnění';
+      const r = box.getBoundingClientRect();
+      tip.style.left = (xs(i) / W * r.width) + 'px';
+      tip.style.top = (ys(d.v) / H * r.height) + 'px';
+      tip.classList.add('on');
+    };
+    const skryj = () => tip.classList.remove('on');
+    el.addEventListener('mouseenter', ukaz);
+    el.addEventListener('focus', ukaz);
+    el.addEventListener('mouseleave', skryj);
+    el.addEventListener('blur', skryj);
+  });
+}
+
+/* ===== Vzkazy a ohlédnutí ===== */
+function vzkazy(tym){
+  const out = [];
+  ROWS.forEach(r => {
+    if (tym && r.kategorie !== tym) return;
+    const texty = [];
+    if (String(r.coachMsg || '').trim()) texty.push(['Vzkaz trenérům', r.coachMsg]);
+    REFLEXE.forEach(([k, q]) => { if (String(r[k] || '').trim()) texty.push([q, r[k]]); });
+    if (!texty.length) return;
+    out.push({ r, texty });
+  });
+  out.sort((a, b) => String(b.r.timestamp).localeCompare(String(a.r.timestamp)));
+  const el = document.getElementById('vzkazy');
+  if (!out.length) { el.innerHTML = '<p class="prazdno">Zatím nic. Vzkazy se objeví, jakmile někdo něco napíše.</p>'; return; }
+  el.innerHTML = out.map(x =>
+    '<div class="vzkaz">' +
+      '<div><span class="kdo">' + esc(x.r.prijmeni) + ' ' + esc(x.r.jmeno) + '</span>' +
+      '<span class="kdy">' + esc(obdobiLabel(x.r.obdobi)) + ' · ' + esc(String(x.r.timestamp).slice(0, 10)) + '</span></div>' +
+      x.texty.map(([q, t]) => '<div class="otazka">' + esc(q) + '</div><div class="co">' + esc(t) + '</div>').join('') +
+    '</div>'
+  ).join('');
+}
+
+/* ===== Kvalita vyplnění ===== */
+function kvalita(tym, obdobi){
+  const m = posledniZaObdobi(tym, obdobi);
+  const podezrele = Object.values(m).map(r => {
+    const duvody = [];
+    if (String(r.kvalita) === 'jednotvárné') duvody.push('všude skoro stejné číslo');
+    const s = num(r.sekundy);
+    if (s !== null && s < 20) duvody.push('vyplněno za ' + s + ' s');
+    return duvody.length ? { r, duvody } : null;
+  }).filter(Boolean);
+  const el = document.getElementById('kvalita');
+  if (!podezrele.length) { el.innerHTML = '<p class="prazdno">Nic podezřelého.</p>'; return; }
+  el.innerHTML = '<div class="chips">' + podezrele.map(x =>
+    '<span class="chip">' + esc(x.r.prijmeni) + ' ' + esc(x.r.jmeno) + ' — ' + esc(x.duvody.join(', ')) + '</span>'
+  ).join('') + '</div>';
+}
+
+/* ===== Brána ===== */
+function vstup(){
+  const v = document.getElementById('pin').value.trim();
+  const m = document.getElementById('gateMsg');
+  if (v !== PIN) { m.textContent = 'Špatný PIN.'; m.className = 'msg err'; return; }
+  m.textContent = ''; m.className = 'msg';
+  try { sessionStorage.setItem('checkin_ok', '1'); } catch (e) {}
+  nacti();
+}
+document.getElementById('gateBtn').onclick = vstup;
+document.getElementById('pin').addEventListener('keydown', e => { if (e.key === 'Enter') vstup(); });
+document.getElementById('retryBtn').onclick = nacti;
+try { document.getElementById('crest').src = CREST; } catch (e) {}
+try { if (sessionStorage.getItem('checkin_ok') === '1') nacti(); } catch (e) {}
+</script>
+</body>
+</html>

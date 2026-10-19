@@ -44,6 +44,7 @@
   .role-wrap{text-align:center;padding:46px 22px 30px}
   .role-wrap img.crest{width:112px;height:auto;margin:0 auto 20px;display:block}
   .role-wrap .eyebrow{font-family:'Barlow Condensed',sans-serif;text-transform:uppercase;letter-spacing:.08em;font-weight:700;font-size:13px;color:var(--wine);margin-bottom:6px}
+  .hello-name{display:block;font-size:30px;line-height:1.05;color:var(--ink);letter-spacing:.01em;margin-top:5px}
   .role-wrap h1{font-family:'Barlow Condensed',sans-serif;text-transform:uppercase;font-weight:700;font-size:38px;line-height:1.03;margin-bottom:10px}
   .role-wrap p{color:var(--muted);font-size:15px;max-width:44ch;margin:0 auto 30px}
   .role-cards{display:flex;flex-direction:column;gap:14px;max-width:400px;margin:0 auto}
@@ -1166,9 +1167,9 @@ function cBuildOpen(host,arr,prefix){const rov=prefix==='h'?'hlava':'tym';arr.fo
   const ta=w.querySelector('textarea');ta.addEventListener('input',()=>{cOpenVal[key]=ta.value.trim();cUpdateMissing();});host.appendChild(w)})}
 function cUpdateProg(){const pct=Math.round((cCur/(C_SCREENS.length-1))*100);
  document.getElementById('cProg').style.width=pct+'%';document.getElementById('cPct').textContent=pct+' %';document.getElementById('cLabel').textContent=C_LABELS[cCur]}
-function cStart(){cCur=0;ACTIVE_ROLE='trener';document.getElementById('cIntro').classList.add('active');
+function cStart(){hideAll();cCur=0;ACTIVE_ROLE='trener';document.getElementById('cIntro').classList.add('active');
  document.getElementById('cNav').style.display='flex';document.getElementById('cBack').style.visibility='hidden';
- document.getElementById('cTop').style.display='none';cUpdateProg();}
+ document.getElementById('cTop').style.display='none';cUpdateProg();window.scrollTo({top:0});}
 function cGo(dir){const next=cCur+dir;if(next<0||next>=C_SCREENS.length)return;
  if(dir>0&&cCur===1){const co=document.getElementById('cCoach').value,pl=document.getElementById('cPlayer').value,pz=document.getElementById('cPozice').value;
    const selP=PLAYERS[+pl];const guestEmpty=selP&&selP.guest&&!(document.getElementById('cGuestName').value||'').trim();
@@ -1613,7 +1614,7 @@ function hubBuild(){
 
 function hubPick(){
   const id=hubLoad(); if(!id){ hubShow('hubWho'); return; }
-  document.getElementById('hubHello').textContent='Ahoj '+id.jmeno+' '+id.prijmeni;
+  document.getElementById('hubHello').innerHTML='Ahoj <span class="hello-name">'+id.jmeno+' '+id.prijmeni+'</span>';
   hubShow('hubPick');
 }
 

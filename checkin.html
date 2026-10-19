@@ -114,7 +114,7 @@
 <div class="wrap">
 
   <header class="top">
-    <a href="./?home" title="Zpět na menu" style="display:flex;align-items:center;gap:12px;text-decoration:none;color:inherit;cursor:pointer">
+    <a href="./?coach" title="Zpět na menu" style="display:flex;align-items:center;gap:12px;text-decoration:none;color:inherit;cursor:pointer">
       <img class="crest" id="crest" alt="Tempo">
       <div>
         <div class="wordmark">IDP <span class="lock">Tempo</span></div>
@@ -313,7 +313,7 @@ function postav(){
   const sel = document.getElementById('fTym');
   sel.innerHTML = tymy.map(t => '<option>' + esc(t) + '</option>').join('');
   if (!tymy.length) sel.innerHTML = '<option>U15</option>';
-  sel.onchange = prekresli;
+  sel.onchange = () => { prekresliTydny(); prekresli(); };
   document.getElementById('fTyden').onchange = prekresli;
   document.getElementById('refreshBtn').onclick = nacti;
   prekresliTydny();
@@ -321,12 +321,14 @@ function postav(){
 }
 function prekresliTydny(){
   const tym = document.getElementById('fTym').value;
+  const sel = document.getElementById('fTyden');
+  const prev = sel.value;
   TYDNY = [...new Set(ROWS.filter(r => r.typ === 'tyden' && (!tym || r.kategorie === tym)).map(r => r.obdobi))]
             .filter(Boolean).sort();
-  const sel = document.getElementById('fTyden');
   sel.innerHTML = TYDNY.length
     ? TYDNY.slice().reverse().map(o => '<option value="' + esc(o) + '">' + esc(obdobiLabel(o)) + '</option>').join('')
     : '<option value="">— zatím žádná data —</option>';
+  if (prev && TYDNY.indexOf(prev) >= 0) sel.value = prev;
 }
 
 /* Poslední vyplnění každého hráče za dané období (duplicity: platí to poslední) */
@@ -373,7 +375,6 @@ function nejslabsi(r){
 
 /* ===== Hlavní vykreslení ===== */
 function prekresli(){
-  prekresliTydny();
   const tym = document.getElementById('fTym').value;
   const obdobi = document.getElementById('fTyden').value;
   const soupiska = ROSTER.filter(p => !tym || p.kategorie === tym);

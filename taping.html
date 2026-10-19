@@ -443,7 +443,8 @@ function update(){
   const slabsi=scored.filter(i=>state.values[i.id]!=null&&well(i,state.values[i.id])<=4)
                      .sort((a,b)=>well(a,state.values[a.id])-well(b,state.values[b.id]));
   const nm=a=>a.slice(0,3).map(i=>labelOf(i).toLowerCase()).join(", ");
-  if(avg<=4) setFlag("crit","Náročný týden",slabsi.length?`Nejvíc tě trápí: ${nm(slabsi)}.`:"Těžký týden.");
+  const krit=slabsi.filter(i=>well(i,state.values[i.id])<=2);
+  if(avg<=4||krit.length) setFlag("crit","Náročný týden",krit.length?`Pozor na: ${nm(krit)}.`:(slabsi.length?`Nejvíc tě trápí: ${nm(slabsi)}.`:"Těžký týden."));
   else if(avg<=6) setFlag("warn","Slabší týden",slabsi.length?`Slabší místa: ${nm(slabsi)}.`:"Pár věcí drhne, ale dá se.");
   else setFlag("good","Dobrý týden",slabsi.length?`Celkově fajn, jen hlídej: ${nm(slabsi)}.`:"Všechno v pohodě — jen tak dál.");
 }

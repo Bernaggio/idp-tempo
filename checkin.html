@@ -157,7 +157,7 @@
     <div class="kpis">
       <div class="kpi"><div class="lbl">Vyplnilo</div><div class="num" id="kVypl">–</div><div class="note" id="kVyplNote"></div></div>
       <div class="kpi"><div class="lbl">Průměr týmu</div><div class="num" id="kPrum">–</div><div class="note" id="kPrumNote"></div></div>
-      <div class="kpi" id="kFlagBox"><div class="lbl">Náročný týden</div><div class="num" id="kFlag">–</div><div class="note">hráčů s nízkým průměrem</div></div>
+      <div class="kpi" id="kFlagBox"><div class="lbl">Náročný týden</div><div class="num" id="kFlag">–</div><div class="note">hráčů v červené zóně</div></div>
       <div class="kpi"><div class="lbl">Zátěž týdne</div><div class="num" id="kLoad">–</div><div class="note">průměr, 1 lehký – 10 vyčerpávající</div></div>
     </div>
 
@@ -349,16 +349,25 @@ function posledniZaObdobi(tym, obdobi){
 }
 
 function skore(r){
-  const p = num(r.prumer);
-  if (p !== null) return p;
   const vals = ITEMS.filter(i => i.scored !== false)
                     .map(i => ({ i, v: num(r[i.id]) }))
                     .filter(x => x.v !== null)
                     .map(x => well(x.i, x.v));
-  return vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : null;
+  if (vals.length) return vals.reduce((a, b) => a + b, 0) / vals.length;
+  return num(r.prumer); // záloha pro historické řádky bez jednotlivých hodnot
 }
-function stav(p){
+function kriticke(r){
+  return ITEMS.filter(i => i.scored !== false)
+    .map(i => ({ lab: i.lab, w: (num(r[i.id]) === null ? null : well(i, num(r[i.id]))) }))
+    .filter(x => x.w !== null && x.w <= 2)
+    .sort((a, b) => a.w - b.w)
+    .map(x => x.lab.toLowerCase());
+}
+function stav(r){
+  if (!r) return { t: 'Nevyplnil', c: 'b-none' };
+  const p = skore(r);
   if (p === null) return { t: 'Nevyplnil', c: 'b-none' };
+  if (kriticke(r).length) return { t: 'Náročný týden', c: 'b-crit' };
   if (p <= 4) return { t: 'Náročný týden', c: 'b-crit' };
   if (p <= 6) return { t: 'Slabší týden', c: 'b-warn' };
   return { t: 'Dobrý týden', c: 'b-good' };
@@ -393,7 +402,7 @@ function prekresli(){
   document.getElementById('kPrum').textContent = prumer === null ? '–' : prumer.toFixed(1);
   document.getElementById('kPrumNote').textContent = prumer === null ? 'zatím nic' : 'z 10, vyšší je lepší';
 
-  const kritickych = Object.values(vypl).filter(r => { const p = skore(r); return p !== null && p <= 4; }).length;
+  const kritickych = Object.values(vypl).filter(r => stav(r).c === 'b-crit').length;
   document.getElementById('kFlag').textContent = String(kritickych);
   document.getElementById('kFlagBox').className = 'kpi' + (kritickych ? ' alarm' : '');
 
@@ -421,7 +430,7 @@ function prekresli(){
     return a.s - b.s;
   });
   document.getElementById('tbody').innerHTML = radky.map(x => {
-    const st = stav(x.s);
+    const st = stav(x.r);
     const r = x.r;
     const sek = r ? num(r.sekundy) : null;
     const por = r ? (num(r.poradi) || 0) : 0;

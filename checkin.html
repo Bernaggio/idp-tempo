@@ -108,6 +108,17 @@
   .back a:hover{color:var(--brand);text-decoration:underline}
   @media (max-width:560px){ .wrap{padding:0 14px 70px} .kpi .num{font-size:28px} }
   @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+  .howto{background:var(--ground);border:1px solid var(--hair);border-radius:12px;padding:12px 16px;margin:14px 0}
+  .howto>summary{cursor:pointer;font-family:"Barlow Condensed",sans-serif;font-weight:700;text-transform:uppercase;letter-spacing:.08em;font-size:13px;color:var(--brand);list-style:none;display:flex;align-items:center;gap:8px}
+  .howto>summary::-webkit-details-marker{display:none}
+  .howto>summary .caret{margin-left:auto;color:var(--muted);font-size:11px;letter-spacing:.06em;font-weight:600}
+  .howto[open]>summary .caret::after{content:"sbalit \25B4"}
+  .howto>summary .caret::after{content:"rozbalit \25BE"}
+  .howto-body{margin-top:10px;font-size:13.5px;line-height:1.5;color:var(--ink)}
+  .howto .hw-lead{color:var(--muted);margin:0 0 8px}
+  .howto .hw-item{padding:4px 0 4px 14px;border-left:2px solid var(--hair-strong);margin:5px 0}
+  .howto .hw-sub{font-weight:700;margin:14px 0 4px}
+  .howto .hw-note{margin-top:14px;color:var(--muted);font-size:12.5px}
 </style>
 </head>
 <body>
@@ -160,6 +171,22 @@
       <div class="kpi" id="kFlagBox"><div class="lbl">Náročný týden</div><div class="num" id="kFlag">–</div><div class="note">hráčů v červené zóně</div></div>
       <div class="kpi"><div class="lbl">Zátěž týdne</div><div class="num" id="kLoad">–</div><div class="note">průměr, 1 lehký – 10 vyčerpávající</div></div>
     </div>
+
+    <details class="howto">
+      <summary>ℹ️ Jak číst tenhle přehled <span class="caret"></span></summary>
+      <div class="howto-body">
+        <p class="hw-lead">Čtyři dlaždice nahoře počítají jen z kluků, kteří ten týden vyplnili — ne z celé soupisky.</p>
+        <div class="hw-item"><b>Vyplnilo</b> — kolik kluků ze soupisky odevzdalo. Čím víc, tím víc přehled platí za celý tým. Pod ~70 % ber čísla jen jako vzorek.</div>
+        <div class="hw-item"><b>Průměr týmu („pohoda")</b> — jak se klukům celkově vede: spánek, únava, bolest, stres, nálada, sebedůvěra, chuť do fotbalu, kolektiv. Škála 1–10, <b>vyšší = cítí se líp</b> (špatné otázky jako stres jsou automaticky otočené, nemusíš to řešit). Nečti absolutní číslo — zajímavý je pohyb v čase.</div>
+        <div class="hw-item"><b>Náročný týden (červená zóna)</b> — kolik kluků je na tom zle: buď nízká pohoda, nebo něco v extrému (stres 9–10, kolektiv 1–2…). <b>Menší = líp, ideál 0.</b> Jména najdeš dole v tabulce — s těmi mluv.</div>
+        <div class="hw-item"><b>Zátěž týdne</b> — jak fyzicky náročný jim týden přišel (jejich pocit). 1 = lehký, 10 = vyčerpávající. <b>Vyšší = víc dřeli.</b></div>
+        <p class="hw-sub">Zátěž vs pohoda — nejsou spojené nádoby, čti je proti sobě:</p>
+        <div class="hw-item">vysoká zátěž + <b>držící</b> pohoda = zvládají, adaptují se 👍</div>
+        <div class="hw-item">vysoká zátěž + <b>padající</b> pohoda = přetížení, uber ⚠️</div>
+        <div class="hw-item">nízká zátěž + nízká pohoda = problém není z tréninku (škola / spánek / hlava)</div>
+        <p class="hw-note">První týdny ber jako sběr dat: čti hlavně červenou zónu a jména v tabulce. Průměry a trend (sloupec <b>TREND</b> u hráče, týmový graf) začnou dávat smysl, až bude vyplňovat víc kluků a naskočí víc týdnů.</p>
+      </div>
+    </details>
 
     <!-- NEVYPLNILI -->
     <div class="card">

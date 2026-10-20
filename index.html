@@ -1631,7 +1631,23 @@ document.getElementById('cardIdp').onclick=hubGoIdp;
 document.getElementById('hNotMe').onclick=function(e){ e.preventDefault(); try{localStorage.removeItem(HUB_KEY);}catch(x){} hubShow('hubWho'); hubFetchRoster(); };
 function goPlayerHub(){ hubShow('hubWho'); hubFetchRoster(); }
 function showRole(){ try{sessionStorage.removeItem('coachAuthed');}catch(e){} hubShow('roleScreen'); }
-function coachMenu(){ hideAll(); var m=document.getElementById('cMenu'); if(m) m.classList.add('active'); }
+let _idpPrefetched=false;
+function prefetchIdpData(){
+  if(_idpPrefetched) return; _idpPrefetched=true;
+  try{ const raw=sessionStorage.getItem('idp_data_cache_v1');
+    if(raw){ const c=JSON.parse(raw); if(c&&c.t&&(Date.now()-c.t)<60000) return; } }catch(e){}
+  if(!API_URL||API_URL.indexOf('http')!==0) return;
+  const cbName='idpPrefetch_'+Date.now();
+  window[cbName]=function(res){
+    try{ if(res&&res.ok){ sessionStorage.setItem('idp_data_cache_v1', JSON.stringify({t:Date.now(), p:{players:res.players||[],coaches:res.coaches||[],responses:res.responses||[]}})); } }catch(e){}
+    try{ delete window[cbName]; }catch(e){} const sc=document.getElementById(cbName); if(sc)sc.remove();
+  };
+  const s=document.createElement('script'); s.id=cbName;
+  s.src=API_URL+'?action=data&callback='+cbName+'&t='+Date.now();
+  s.onerror=function(){ try{ delete window[cbName]; }catch(e){} _idpPrefetched=false; };
+  document.body.appendChild(s);
+}
+function coachMenu(){ hideAll(); var m=document.getElementById('cMenu'); if(m) m.classList.add('active'); prefetchIdpData(); }
 var _hbrc=document.getElementById('hBackRoleCoach'); if(_hbrc) _hbrc.onclick=function(e){ e.preventDefault(); showRole(); };
 var _hbr=document.getElementById('hBackRole'); if(_hbr) _hbr.onclick=function(e){ e.preventDefault(); showRole(); };
 var _hbr2=document.getElementById('hBackRole2'); if(_hbr2) _hbr2.onclick=function(e){ e.preventDefault(); showRole(); };

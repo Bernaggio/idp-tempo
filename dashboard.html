@@ -315,16 +315,26 @@ function selectPeriod(period,season,short){
 }
 let curClub='cafc', curTeam='';
 
+const IDP_CACHE_KEY='idp_data_cache_v1', IDP_CACHE_FRESH=30000;
+function applyData_(p){ DB.players=p.players||[]; DB.coaches=p.coaches||[]; DB.responses=p.responses||[]; }
 function loadData(cb){
+  // 1) okamžitě posloužit z cache (stejná doména jako index → sdílí ji prefetch)
+  let served=false, age=Infinity;
+  try{ const raw=sessionStorage.getItem(IDP_CACHE_KEY);
+    if(raw){ const c=JSON.parse(raw); if(c&&c.p){ applyData_(c.p); age=Date.now()-(c.t||0); served=true; cb&&cb(); } }
+  }catch(e){}
+  if(served && age<IDP_CACHE_FRESH) return; // čerstvá cache → není co stahovat
+  // 2) stáhnout (poprvé = s loading hláškou; jinak tiché doplnění pro příště)
   const cbName='idpData_'+Date.now();
   window[cbName]=function(res){
-    try{ if(res&&res.ok){ DB.players=res.players||[]; DB.coaches=res.coaches||[]; DB.responses=res.responses||[]; } }catch(e){}
-    delete window[cbName]; const s=document.getElementById(cbName); if(s)s.remove();
-    cb&&cb();
+    try{ if(res&&res.ok){ applyData_(res);
+      try{ sessionStorage.setItem(IDP_CACHE_KEY, JSON.stringify({t:Date.now(), p:{players:DB.players,coaches:DB.coaches,responses:DB.responses}})); }catch(e){} } }catch(e){}
+    delete window[cbName]; const sc=document.getElementById(cbName); if(sc)sc.remove();
+    if(!served) cb&&cb();
   };
   const s=document.createElement('script'); s.id=cbName;
-  s.src=API_URL+'?action=data&callback='+cbName;
-  s.onerror=function(){ cb&&cb(); };
+  s.src=API_URL+'?action=data&callback='+cbName+'&t='+Date.now();
+  s.onerror=function(){ if(!served) cb&&cb(); };
   document.body.appendChild(s);
 }
 
